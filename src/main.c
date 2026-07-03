@@ -564,6 +564,7 @@ void updateLink(PlayState* play) {
         *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lnormal_kiru_finsh_end) = gPanHumanSkelPan_fighter_lnormal_kiru_finsh_endAnim;
         *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lpower_kiru_wait_end) = gPanHumanSkelPan_fighter_lpower_kiru_wait_endAnim;
         *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_normal_normal2fighter) = gPanHumanSkelPan_normal_normal2fighter_freeAnim;
+    } else if (player->transformation == PLAYER_FORM_DEKU) {
         *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkistart) = gPanDekuSkelGpananim_pn_gakkistartAnim;
         *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkiplay) = gPanDekuSkelGpananim_pn_gakkiplayAnim;
     }
