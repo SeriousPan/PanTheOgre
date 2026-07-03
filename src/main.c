@@ -746,8 +746,8 @@ MODEL_REPLACER_CALLBACK_ON_REGISTER_REPLACERS void registerPanGiModels() {
     ModelReplacer_setReplacerModel(panGiOcarina2, gGiCull);
     
     //transformation masks
-    ModelReplacerHandle panGiDekuMask = ModelReplacer_registerReplacer(OBJECT_MASK_NUTS, gGiDekuMaskDL, gGiPanDekuMaskDL);
-    ModelReplacerHandle panGiZoraMask = ModelReplacer_registerReplacer(OBJECT_MASK_ZORA, gGiZoraMaskDL, gGiPanZoraMaskDL);
+    ModelReplacerHandle panGiDekuMask = ModelReplacer_registerReplacer(OBJECT_GI_NUTSMASK, gGiDekuMaskDL, gGiPanDekuMaskDL);
+    ModelReplacerHandle panGiZoraMask = ModelReplacer_registerReplacer(OBJECT_GI_ZORAMASK, gGiZoraMaskDL, gGiPanZoraMaskDL);
 
     //masks
     ModelReplacerHandle panGiMaskBomb = ModelReplacer_registerReplacer(OBJECT_GI_MASK21, gGiBlastMaskDL, gGiPanMaskBombDL);
