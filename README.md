@@ -8,4 +8,3 @@ Registers Pan as Child Link and Pan the Weddie as Zora in Player Model Manager. 
 * Dragon Quest X for the original models
 * Pan for the model edits, model ripping, texture editing.
 * CamooCamus for the icon art.
-
