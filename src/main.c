@@ -205,38 +205,8 @@ TexturePtr gPanDekuEyesL0[] = {
     gPanDekuSkel_deku_eyes_altclench_ci8,
 };
 
-RECOMP_HOOK("Player_PostLimbDrawGameplay") void on_Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList1, Gfx** dList2, Vec3s* rot, Actor* actor) {
-    Player* player = (Player*)actor;
-
-    if (limbIndex == PLAYER_LIMB_RIGHT_HAND) {
-        Actor* heldActor = player->heldActor;
-        s32 pad;
-
-        if (*dList1 != NULL) {
-            if (player->rightHandType == PLAYER_MODELTYPE_RH_BOW) {
-
-                OPEN_DISPS(play->state.gfxCtx);
-                Matrix_Push();
-                gPushedMatrix++;
-                Matrix_Translate(0.f, BOWSTRING_OFFSET, 0.f, MTXMODE_APPLY);
-                MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx);
-                CLOSE_DISPS(play->state.gfxCtx);
-            }
-        } else {
-            gPushedMatrix = 0;
-        }
-    } else {
-        gPushedMatrix = 0;
-    }
-}
-
-RECOMP_HOOK_RETURN("Player_PostLimbDrawGameplay") void return_Player_PostLimbDrawGameplay(void) {
-    while (gPushedMatrix) {
-        Matrix_Pop();
-        gPushedMatrix--;
-    }
-    gPushedMatrix = 0;
-}
+PlayerModelManagerHandle gPanHumanHandle;
+PlayerModelManagerHandle gPanDekuHandle;
 
 PLAYERMODELMANAGER_CALLBACK_REGISTER_MODELS void registerPan() {
 
@@ -268,6 +238,7 @@ PLAYERMODELMANAGER_CALLBACK_REGISTER_MODELS void registerPan() {
     PlayerModelManager_setDisplayList(panDeku, PMM_DL_ELEGY_OF_EMPTINESS_SHELL, gElegyShellKapipiDekuDL);
 
     PlayerModelManager_addHandleToPack(panHandle, panDeku);
+    gPanDekuHandle = panDeku;
     
     PlayerModelManagerHandle panDekuMask = PLAYERMODELMANAGER_REGISTER_MODEL("mm_pan_deku_mask_pmm", PMM_MODEL_TYPE_MASK_DEKU);
     PlayerModelManager_setAuthor(panDekuMask, "Zuke");
@@ -321,7 +292,7 @@ PLAYERMODELMANAGER_CALLBACK_REGISTER_MODELS void registerPan() {
     PlayerModelManager_setDisplayList(panHuman, PMM_DL_LHAND_BOTTLE, gPanHumanBottle_bone015_gLinkHumanLeftHandLimb_mesh_layer_Opaque);
     PlayerModelManager_setDisplayList(panHuman, PMM_DL_LFIST, gPanHumanHands_bone015_gLinkHumanLeftHandLimb_mesh_layer_Opaque);
     PlayerModelManager_setDisplayList(panHuman, PMM_DL_RFIST, gPanHumanHands_bone018_gLinkHumanRightHandLimb_mesh_layer_Opaque);
-        
+            
     guPosition(&gPanMaskMtx, MASK_ROTATE_X, MASK_ROTATE_Y, MASK_ROTATE_Z, MASK_SCALE, MASK_TRANSLATE_X, MASK_TRANSLATE_Y, MASK_TRANSLATE_Z);
     guPosition(&gPanShieldMtx, SHIELD_ROTATE_X, SHIELD_ROTATE_Y, SHIELD_ROTATE_Z, SHIELD_SCALE, SHIELD_TRANSLATE_X, SHIELD_TRANSLATE_Y, SHIELD_TRANSLATE_Z);
     guPosition(&gPanHookshotMtx, HOOKSHOT_ROTATE_X, HOOKSHOT_ROTATE_Y, HOOKSHOT_ROTATE_Z, HOOKSHOT_SCALE, HOOKSHOT_TRANSLATE_X, HOOKSHOT_TRANSLATE_Y, HOOKSHOT_TRANSLATE_Z);
@@ -338,6 +309,7 @@ PLAYERMODELMANAGER_CALLBACK_REGISTER_MODELS void registerPan() {
     PlayerModelManager_setDisplayList(panHuman, PMM_DL_ELEGY_OF_EMPTINESS_SHELL, gElegyShellPanHumanDL);
 
     PlayerModelManager_addHandleToPack(panHandle, panHuman);
+    gPanHumanHandle = panHuman;
 
     PlayerModelManagerHandle panOcarina = PLAYERMODELMANAGER_REGISTER_MODEL("mm_pan_ocarina_pmm", PMM_MODEL_TYPE_OCARINA_TIME);
     PlayerModelManager_setAuthor(panOcarina, "Zuke");
@@ -493,7 +465,44 @@ PLAYERMODELMANAGER_CALLBACK_REGISTER_MODELS void registerPan() {
     PlayerModelManager_addHandleToPack(panEquips, panMaskStone);
 }
 
+bool isPan;
+bool isDekuPan;
 
+RECOMP_HOOK("Player_PostLimbDrawGameplay") void on_Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList1, Gfx** dList2, Vec3s* rot, Actor* actor) {
+    Player* player = (Player*)actor;
+    isPan = PlayerModelManager_Actor_isModelApplied(&player->actor, isPan);
+    if (!isPan) {
+    } else {
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND) {
+            Actor* heldActor = player->heldActor;
+            s32 pad;
+    
+            if (*dList1 != NULL) {
+                if (player->rightHandType == PLAYER_MODELTYPE_RH_BOW) {
+    
+                    OPEN_DISPS(play->state.gfxCtx);
+                    Matrix_Push();
+                    gPushedMatrix++;
+                    Matrix_Translate(0.f, BOWSTRING_OFFSET, 0.f, MTXMODE_APPLY);
+                    MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx);
+                    CLOSE_DISPS(play->state.gfxCtx);
+                }
+            } else {
+                gPushedMatrix = 0;
+            }
+        } else {
+            gPushedMatrix = 0;
+        }
+    }
+}
+
+RECOMP_HOOK_RETURN("Player_PostLimbDrawGameplay") void return_Player_PostLimbDrawGameplay(void) {
+    while (gPushedMatrix) {
+        Matrix_Pop();
+        gPushedMatrix--;
+    }
+    gPushedMatrix = 0;
+}
 
 #include "anim/gPanHumanSkelPan_fighter_wait_longAnim.h"
 #include "anim/gPanHumanSkelPan_fighter_wait2waitr_longAnim.h"
@@ -541,38 +550,44 @@ extern LinkAnimationHeader gPlayerAnim_link_normal_normal2fighter[];
 extern LinkAnimationHeader gPlayerAnim_pn_gakkistart[];
 extern LinkAnimationHeader gPlayerAnim_pn_gakkiplay[];
 
-void updateLink(PlayState* play) {
+RECOMP_HOOK("PlayerAnimation_Update") s32 on_PlayerAnimation_Update(struct PlayState* play, SkelAnime* skelAnime) {
     Player* player = GET_PLAYER(play);
-    if (player->transformation == PLAYER_FORM_HUMAN) {
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_wait_long) = gPanHumanSkelPan_fighter_wait_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_wait2waitR_long) = gPanHumanSkelPan_fighter_wait2waitr_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_waitL2wait_long) = gPanHumanSkelPan_fighter_waitl2wait_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_waitR2wait_long) = gPanHumanSkelPan_fighter_waitr2wait_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_long) = gPanHumanSkelPan_fighter_walk_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_endL_long) = gPanHumanSkelPan_fighter_walk_endl_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_endR_long) = gPanHumanSkelPan_fighter_walk_endr_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walk_long) = gPanHumanSkelPan_fighter_side_walk_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walkL_long) = gPanHumanSkelPan_fighter_side_walkl_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walkR_long) = gPanHumanSkelPan_fighter_side_walkr_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_run_long) = gPanHumanSkelPan_fighter_run_longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_fighter2long) = gPanHumanSkelPan_fighter_fighter2longAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lpierce_kiru_end) = gPanHumanSkelPan_fighter_lpierce_kiru_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LRside_kiru_end) = gPanHumanSkelPan_fighter_lrside_kiru_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LLside_kiru_end) = gPanHumanSkelPan_fighter_llside_kiru_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LRside_kiru_finsh_end) = gPanHumanSkelPan_fighter_lrside_kiru_finsh_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LLside_kiru_finsh_end) = gPanHumanSkelPan_fighter_llside_kiru_finsh_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lnormal_kiru_finsh_end) = gPanHumanSkelPan_fighter_lnormal_kiru_finsh_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lpower_kiru_wait_end) = gPanHumanSkelPan_fighter_lpower_kiru_wait_endAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_normal_normal2fighter) = gPanHumanSkelPan_normal_normal2fighter_freeAnim;
-    } else if (player->transformation == PLAYER_FORM_DEKU) {
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkistart) = gPanDekuSkelGpananim_pn_gakkistartAnim;
-        *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkiplay) = gPanDekuSkelGpananim_pn_gakkiplayAnim;
-    }
-}
 
-RECOMP_CALLBACK("*", recomp_on_play_main)
-void mainUpdate(PlayState* play) {
-    updateLink(play);
+    isPan = PlayerModelManager_Actor_isModelApplied(&player->actor, gPanHumanHandle);
+    isDekuPan = PlayerModelManager_Actor_isModelApplied(&player->actor, gPanDekuHandle);
+
+    if (!isPan) {
+    } else {
+        if (player->transformation == PLAYER_FORM_HUMAN) {
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_wait_long) = gPanHumanSkelPan_fighter_wait_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_wait2waitR_long) = gPanHumanSkelPan_fighter_wait2waitr_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_waitL2wait_long) = gPanHumanSkelPan_fighter_waitl2wait_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_waitR2wait_long) = gPanHumanSkelPan_fighter_waitr2wait_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_long) = gPanHumanSkelPan_fighter_walk_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_endL_long) = gPanHumanSkelPan_fighter_walk_endl_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_walk_endR_long) = gPanHumanSkelPan_fighter_walk_endr_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walk_long) = gPanHumanSkelPan_fighter_side_walk_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walkL_long) = gPanHumanSkelPan_fighter_side_walkl_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_side_walkR_long) = gPanHumanSkelPan_fighter_side_walkr_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_run_long) = gPanHumanSkelPan_fighter_run_longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_fighter2long) = gPanHumanSkelPan_fighter_fighter2longAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lpierce_kiru_end) = gPanHumanSkelPan_fighter_lpierce_kiru_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LRside_kiru_end) = gPanHumanSkelPan_fighter_lrside_kiru_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LLside_kiru_end) = gPanHumanSkelPan_fighter_llside_kiru_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LRside_kiru_finsh_end) = gPanHumanSkelPan_fighter_lrside_kiru_finsh_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_LLside_kiru_finsh_end) = gPanHumanSkelPan_fighter_llside_kiru_finsh_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lnormal_kiru_finsh_end) = gPanHumanSkelPan_fighter_lnormal_kiru_finsh_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_fighter_Lpower_kiru_wait_end) = gPanHumanSkelPan_fighter_lpower_kiru_wait_endAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_link_normal_normal2fighter) = gPanHumanSkelPan_normal_normal2fighter_freeAnim;
+        }
+    }
+    if (!isDekuPan) {
+    } else {
+        if (player->transformation == PLAYER_FORM_DEKU) {
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkistart) = gPanDekuSkelGpananim_pn_gakkistartAnim;
+            *(LinkAnimationHeader*)Lib_SegmentedToVirtual(&gPlayerAnim_pn_gakkiplay) = gPanDekuSkelGpananim_pn_gakkiplayAnim;
+        }
+    }
 }
 
 TexturePtr gPanZoraBrows[] = {
